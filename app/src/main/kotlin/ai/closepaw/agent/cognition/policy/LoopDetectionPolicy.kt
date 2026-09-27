@@ -7,18 +7,20 @@ import ai.closepaw.agent.cognition.context.ScreenSignature
 /**
  * Thresholds for deciding whether the agent is stuck on UI navigation.
  *
- * Only detects stable-screen (near-identical screens for N consecutive turns).
+ * Detects stable screens, then stops after repeated attempts without UI progress.
  * All advisory warnings (cycle detection, tool dominance, scroll spam, action repetition)
  * have been removed — they caused false positives that poisoned multi-item workflows.
  */
 internal data class LoopDetectionConfig(
     val similarityThreshold: Double = 0.95,
-    val stableScreenWindow: Int = 5
+    val stableScreenWindow: Int = 5,
+    val stopAfterStableTurns: Int = 8
 )
 
 /** Combined result of loop detection: the warning (if any). */
 internal data class LoopDetectionResult(
-    val warning: LoopWarning?
+    val warning: LoopWarning?,
+    val shouldStop: Boolean = false
 )
 
 /**
@@ -29,12 +31,20 @@ internal data class LoopDetectionResult(
  * The warning states a fact ("screen has not changed") — no strategy suggestions.
  * The LLM decides what to do with the information.
  *
- * Turn limit is the only hard stop mechanism. Advisory warnings are facts, not opinions.
+ * Give the agent three more turns after the warning to recover. If the screen
+ * stays unchanged, stop before spending more model calls on the same view.
  */
 internal class LoopDetectionPolicy(
     private val config: LoopDetectionConfig = LoopDetectionConfig()
 ) {
     fun detect(state: NavigationState): LoopDetectionResult {
+        val stalled = state.recentSignatures.takeLast(config.stopAfterStableTurns)
+        if (stalled.size == config.stopAfterStableTurns && stalled.isStable(config.similarityThreshold)) {
+            return LoopDetectionResult(
+                warning = LoopWarning("Screen has not changed for ${config.stopAfterStableTurns} turns."),
+                shouldStop = true
+            )
+        }
         val recent = state.recentSignatures.takeLast(config.stableScreenWindow)
         if (recent.size == config.stableScreenWindow && recent.isStable(config.similarityThreshold)) {
             return LoopDetectionResult(
