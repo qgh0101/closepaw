@@ -242,7 +242,7 @@ fun ApiKeyStepContent(
                 onKeyChanged = onKeyChanged,
                 onValidate = onValidate,
                 onRetry = onRetry,
-                showSwitchToOAuth = selectedProvider == OnboardingProvider.OPENAI_API,
+                showSwitchToOAuth = false,
                 onSwitchToOAuth = { onAuthMethodSelected(ApiKeyAuthMethod.OAUTH) }
             )
         }
