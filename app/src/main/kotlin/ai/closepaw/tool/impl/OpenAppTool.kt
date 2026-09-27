@@ -211,6 +211,18 @@ private class OpenAppInvocation(
         return when (result) {
             is ActionResult.Success -> {
                 delay(UI_SETTLE_DELAY_MS)
+                var foreground = context.platform.getCurrentPackageName()
+                repeat(4) {
+                    if (foreground == targetPackage) return@repeat
+                    delay(500)
+                    foreground = context.platform.getCurrentPackageName()
+                }
+                if (foreground != targetPackage) {
+                    return ToolExecutionResult.Failure(
+                        "Launch requested, but '${match.label}' did not become foreground " +
+                            "(current app: ${foreground ?: "unknown"}). Check app launch and display permissions."
+                    )
+                }
 
                 val snapshot = try {
                     context.platform.captureScreen()
