@@ -114,7 +114,7 @@ class CapsuleOverlayHost(
 
     fun show() {
         if (composeHost.isShowing()) return
-        composeHost.show(createLayoutParams(interactionLocked.value)) {
+        val shown = composeHost.show(createLayoutParams(interactionLocked.value)) {
             val mode by stateHolder.mode.collectAsState(initial = CapsuleMode.Hidden)
             val stopPending by stateHolder.isStopPending.collectAsState(initial = false)
             val ctx by stateHolder.context.collectAsState()
@@ -239,9 +239,11 @@ class CapsuleOverlayHost(
                 }
             }
         }
-        startFocusObserver()
-        startTouchabilityObserver()
-        Log.i(TAG, "Capsule overlay shown")
+        if (shown) {
+            startFocusObserver()
+            startTouchabilityObserver()
+            Log.i(TAG, "Capsule overlay shown")
+        }
     }
 
     fun hide() {
