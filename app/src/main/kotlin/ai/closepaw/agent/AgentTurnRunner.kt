@@ -83,7 +83,12 @@ internal class AgentTurnRunner(
                                         val preparedTurn =
                                                 prepareTurn(turnNumber, nextState, snapshot)
                                         nextState = preparedTurn.nextState
-
+                                        if (preparedTurn.shouldStop) {
+                                            TurnOutcome.Error(
+                                                "Screen remained unchanged for 8 turns. Stopping to avoid repeating actions.",
+                                                recoverable = false
+                                            )
+                                        } else {
                                         val planningResult =
                                                 planningPhaseRunner.runPlanningPhase(
                                                         turnId = turnId,
@@ -111,6 +116,7 @@ internal class AgentTurnRunner(
                                                 arbitration = planningResult.arbitration,
                                                 execution = executionResult
                                         )
+                                        }
                                 }
                         } catch (e: CancellationException) {
                                 throw e // Don't treat coroutine cancellation as a turn error
@@ -126,7 +132,8 @@ internal class AgentTurnRunner(
 
         private data class PreparedTurn(
                 val nextState: TurnRunnerState,
-                val warnings: List<String>
+                val warnings: List<String>,
+                val shouldStop: Boolean
         )
 
         private suspend fun capturePreTurnSnapshot(
@@ -210,7 +217,8 @@ internal class AgentTurnRunner(
 
                 return PreparedTurn(
                         nextState = nextState,
-                        warnings = warnings
+                        warnings = warnings,
+                        shouldStop = loopResult.shouldStop
                 )
         }
 
