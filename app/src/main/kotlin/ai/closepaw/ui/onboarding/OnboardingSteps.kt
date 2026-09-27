@@ -242,7 +242,7 @@ fun ApiKeyStepContent(
                 onKeyChanged = onKeyChanged,
                 onValidate = onValidate,
                 onRetry = onRetry,
-                showSwitchToOAuth = selectedProvider == OnboardingProvider.OPENAI_API,
+                showSwitchToOAuth = false,
                 onSwitchToOAuth = { onAuthMethodSelected(ApiKeyAuthMethod.OAUTH) }
             )
         }
@@ -637,11 +637,6 @@ fun CompleteStepContent(
         LiveStatusRow("Accessibility service", accessibilityGranted)
         LiveStatusRow("Display overlay", overlayGranted)
         LiveStatusRow("Battery optimization", batteryGranted)
-        val apiKeyLabel = if (authMethod == ApiKeyAuthMethod.OAUTH) "Signed in with OpenAI"
-            else "API key verified"
-        OutcomeRow(apiKeyLabel, outcomes.apiKey)
-        OutcomeRow("Demo task", outcomes.demo)
-
         Spacer(modifier = Modifier.weight(1f))
 
         Button(

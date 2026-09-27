@@ -1,6 +1,7 @@
 package ai.closepaw.ui.overlay.compose
 
 import android.content.Context
+import android.provider.Settings
 import android.util.Log
 import android.view.WindowManager
 import androidx.compose.runtime.Composable
@@ -30,25 +31,37 @@ class OverlayComposeHost(
     fun show(
         layoutParams: WindowManager.LayoutParams,
         content: @Composable () -> Unit,
-    ) {
-        if (composeView != null) return
-        try {
-            val view = ComposeView(context).apply {
-                setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnDetachedFromWindow)
-                setViewTreeLifecycleOwner(lifecycleOwner)
-                setViewTreeSavedStateRegistryOwner(savedStateRegistryOwner)
-                setContent {
-                    ClosePawTheme {
-                        content()
-                    }
-                }
-            }
-            windowManager.addView(view, layoutParams)
-            composeView = view
-            params = layoutParams
-        } catch (e: Exception) {
-            Log.e(tag, "Failed to show Compose overlay", e)
+    ): Boolean {
+        if (composeView != null) return true
+        val view = ComposeView(context).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnDetachedFromWindow)
+            setViewTreeLifecycleOwner(lifecycleOwner)
+            setViewTreeSavedStateRegistryOwner(savedStateRegistryOwner)
+            setContent { ClosePawTheme { content() } }
         }
+        try {
+            windowManager.addView(view, layoutParams)
+        } catch (e: Exception) {
+            Log.e(tag, "Failed to add overlay type=${layoutParams.type}; trying permitted fallback", e)
+            if (layoutParams.type != WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY ||
+                !Settings.canDrawOverlays(context)
+            ) {
+                view.disposeComposition()
+                return false
+            }
+            layoutParams.type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+            try {
+                windowManager.addView(view, layoutParams)
+            } catch (fallbackError: Exception) {
+                Log.e(tag, "Failed to add application overlay fallback", fallbackError)
+                view.disposeComposition()
+                return false
+            }
+        }
+        composeView = view
+        params = layoutParams
+        Log.i(tag, "Overlay attached: type=${layoutParams.type}")
+        return true
     }
 
     fun hide() {

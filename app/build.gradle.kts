@@ -46,6 +46,9 @@ android {
 
     buildTypes {
         debug {
+            // CI debug keys differ between runs. Install the test build alongside
+            // the existing app so an update never requires deleting user data.
+            applicationIdSuffix = ".preview2"
             val evalSsl = project.findProperty("insecureSslForEval")?.toString()?.toBoolean() ?: false
             buildConfigField("boolean", "INSECURE_SSL_FOR_EVAL", evalSsl.toString())
         }
