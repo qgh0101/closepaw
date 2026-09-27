@@ -155,8 +155,7 @@ class AccessibilityPlatform(
         val capturedAt = System.currentTimeMillis()
         val roots = windowRoots.roots
         val keyboardVisible = windowRoots.keyboardVisible
-        // Use the topmost window (last in ascending-layer-sorted list) for screenshot targeting
-        val windowId = roots.lastOrNull()?.windowId
+        val windowId = windowRoots.screenshotWindowId
 
         if (roots.isEmpty()) {
             val quality = CaptureQuality(
@@ -235,7 +234,8 @@ class AccessibilityPlatform(
 
     private data class WindowRoots(
             val roots: List<AccessibilityNodeInfo>,
-            val keyboardVisible: Boolean
+            val keyboardVisible: Boolean,
+            val screenshotWindowId: Int? = null
     )
 
     /**
@@ -270,9 +270,15 @@ class AccessibilityPlatform(
                 }
             val collectedRoots = mutableListOf<AccessibilityNodeInfo>()
             var hasNullRoot = false
+            var screenshotWindowId: Int? = null
             for (w in eligible.sortedBy { it.layer }) {
                 val root = w.root
-                if (root != null) collectedRoots.add(root) else hasNullRoot = true
+                if (root != null) {
+                    collectedRoots.add(root)
+                    if (w.type == AccessibilityWindowInfo.TYPE_APPLICATION) {
+                        screenshotWindowId = w.id
+                    }
+                } else hasNullRoot = true
             }
             // OEM workaround: some devices return null for AccessibilityWindowInfo.getRoot()
             // on focused windows (e.g. runtime permission dialogs) even though the tree is
@@ -289,9 +295,13 @@ class AccessibilityPlatform(
             } else {
                 collectedRoots
             }
+            // System bars can have a higher layer than the app. On Android 14+
+            // takeScreenshotOfWindow would otherwise return only the status bar.
+            // With no application window, capture the full display instead.
             WindowRoots(
                 roots = finalRoots.ifEmpty { listOfNotNull(service.rootInActiveWindow) },
-                keyboardVisible = keyboardVisible
+                keyboardVisible = keyboardVisible,
+                screenshotWindowId = screenshotWindowId
             )
         } finally {
             windows.forEach { window ->
