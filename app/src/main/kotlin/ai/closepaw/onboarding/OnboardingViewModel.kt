@@ -318,10 +318,7 @@ class OnboardingViewModel(
         if (!isAccessibilityEnabled()) return WizardStep.Accessibility
         if (!isOverlayEnabled()) return WizardStep.Overlay
         if (outcomes.battery == StepOutcome.Pending && !isBatteryOptimized()) return WizardStep.Battery
-        if (outcomes.battery != StepOutcome.Pending && outcomes.apiKey == StepOutcome.Pending) return WizardStep.ApiKey
         if (outcomes.battery == StepOutcome.Pending) return WizardStep.Battery
-        if (outcomes.apiKey == StepOutcome.Pending) return WizardStep.ApiKey
-        if (outcomes.demo == StepOutcome.Pending) return WizardStep.Demo
         return WizardStep.Complete
     }
 
@@ -464,7 +461,7 @@ class OnboardingViewModel(
     private fun nextStep(current: WizardStep): WizardStep = when (current) {
         WizardStep.Accessibility -> WizardStep.Overlay
         WizardStep.Overlay -> WizardStep.Battery
-        WizardStep.Battery -> WizardStep.ApiKey
+        WizardStep.Battery -> WizardStep.Complete
         WizardStep.ApiKey -> WizardStep.Demo
         WizardStep.Demo -> WizardStep.Complete
         WizardStep.Complete -> WizardStep.Complete
@@ -477,7 +474,7 @@ class OnboardingViewModel(
         WizardStep.Battery -> WizardStep.Overlay
         WizardStep.ApiKey -> WizardStep.Battery
         WizardStep.Demo -> WizardStep.ApiKey
-        WizardStep.Complete -> WizardStep.Demo
+        WizardStep.Complete -> WizardStep.Battery
     }
 
     // ── Permission checks (delegate to monitor) ──
