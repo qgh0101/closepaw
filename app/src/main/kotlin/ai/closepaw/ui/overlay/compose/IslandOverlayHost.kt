@@ -42,7 +42,7 @@ class IslandOverlayHost(
 
     fun show() {
         if (composeHost.isShowing()) return
-        composeHost.show(createLayoutParams()) {
+        val shown = composeHost.show(createLayoutParams()) {
             val holder = stateHolder
             if (holder == null) {
                 StatusIslandCompose(
@@ -64,7 +64,7 @@ class IslandOverlayHost(
                 )
             }
         }
-        Log.i(TAG, "Status island shown")
+        if (shown) Log.i(TAG, "Status island shown")
     }
 
     fun hide() {
