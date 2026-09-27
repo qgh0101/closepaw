@@ -37,6 +37,21 @@ class LoopDetectionPolicyTest {
 
         assertThat(result.warning).isNotNull()
         assertThat(result.warning?.message).contains("not changed for 5 turns")
+        assertThat(result.shouldStop).isFalse()
+    }
+
+    @Test
+    fun `stops after eight stable screens but allows recovery when screen changes`() {
+        val policy = LoopDetectionPolicy()
+        var state = NavigationState()
+        repeat(7) { state = state.advance(snapshot(label = "Stuck")) }
+        assertThat(policy.detect(state).shouldStop).isFalse()
+
+        state = state.advance(snapshot(label = "Changed"))
+        assertThat(policy.detect(state).shouldStop).isFalse()
+
+        repeat(8) { state = state.advance(snapshot(label = "Stuck again")) }
+        assertThat(policy.detect(state).shouldStop).isTrue()
     }
 
     @Test
