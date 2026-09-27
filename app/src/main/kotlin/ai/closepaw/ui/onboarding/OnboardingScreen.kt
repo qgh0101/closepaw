@@ -51,7 +51,7 @@ fun OnboardingScreen(
         effects.collect { effect -> onEffect(effect) }
     }
 
-    val totalSteps = 5
+    val totalSteps = 3
     // Back arrow on all steps except the first
     val backAction: (() -> Unit)? = if (currentStep != WizardStep.Accessibility) onBack else null
 
