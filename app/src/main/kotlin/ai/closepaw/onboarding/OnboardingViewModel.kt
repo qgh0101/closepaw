@@ -62,7 +62,7 @@ class OnboardingViewModel(
     var selectedProvider by mutableStateOf(OnboardingProvider.OPENAI_API)
         private set
 
-    var authMethod by mutableStateOf(ApiKeyAuthMethod.OAUTH)
+    var authMethod by mutableStateOf(ApiKeyAuthMethod.MANUAL)
         private set
 
     val providerLabel: String get() = selectedProvider.label
@@ -73,13 +73,8 @@ class OnboardingViewModel(
         if (currentStep != WizardStep.ApiKey) return
         if (provider == selectedProvider) return
         selectedProvider = provider
-        if (provider == OnboardingProvider.OPENAI_API) {
-            authMethod = ApiKeyAuthMethod.OAUTH
-            stepState = ApiKeyStepState.OAuthReady
-        } else {
-            authMethod = ApiKeyAuthMethod.MANUAL
-            stepState = ApiKeyStepState.Empty
-        }
+        authMethod = ApiKeyAuthMethod.MANUAL
+        stepState = ApiKeyStepState.Empty
     }
 
     fun selectAuthMethod(method: ApiKeyAuthMethod) {
@@ -359,13 +354,8 @@ class OnboardingViewModel(
                     outcomes = outcomes.copy(apiKey = StepOutcome.Pending)
                 }
 
-                if (selectedProvider == OnboardingProvider.OPENAI_API) {
-                    authMethod = ApiKeyAuthMethod.OAUTH
-                    stepState = ApiKeyStepState.OAuthReady
-                } else {
-                    authMethod = ApiKeyAuthMethod.MANUAL
-                    stepState = ApiKeyStepState.Empty
-                }
+                authMethod = ApiKeyAuthMethod.MANUAL
+                stepState = ApiKeyStepState.Empty
             }
             WizardStep.Demo -> {
                 stepState = DemoStepState.Ready
